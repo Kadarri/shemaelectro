@@ -51,7 +51,11 @@
         if (r && r.code==='permission-denied'){ showCode(u); return; }
         return fs.doc('members/'+u.uid).get().catch(function(){ return null; }).then(function(m){
           if (m && m.exists && m.data().dev && m.data().dev!==devId()){ try{ sessionStorage.setItem('se-denied','📵 هاد الحساب مربوط بتيليفون آخر. طلب من مول المحل يعطيك كود جديد.'); }catch(x){} auth.signOut(); return; }
-          hideLogin(); hideCode(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs();
+          return roleOf(u).then(function(role){
+            window.SE.role=role;
+            if (applyRole(role)) { location.reload(); return; }
+            hideLogin(); hideCode(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs();
+          });
         });
       });
     }
@@ -61,6 +65,27 @@
   window.seLogout=function(){ auth.signOut(); };
 
 
+
+  /* ---------- roles: owner / full (brother, by email) / seller (joined with a code) ---------- */
+  var PIN='19981998';
+  function codeOf(nk){ var h=5381; for (var i=0;i<nk.length;i++){ h=((h<<5)+h+nk.charCodeAt(i))>>>0; } return h.toString(36); }
+  function roleOf(u){
+    return fs.collection('codes').limit(1).get().then(function(){ return 'owner'; }, function(){
+      return fs.doc('staff/'+String(u.email||'').toLowerCase()).get().then(function(d){ return d.exists?'full':'seller'; }, function(){ return 'seller'; });
+    }).then(function(role){
+      var h=codeOf('wns-pin-'+PIN); fs.doc('settings/extra').get().then(function(x){ var cur=x.exists&&x.data().pinH; if (role==='owner' ? cur!==h : !cur) fs.doc('settings/extra').set({pinH:h},{merge:true}); }).catch(function(){});
+      return role;
+    });
+  }
+  (function(){ var st=document.createElement('style'); st.textContent='.worker #tab-buy,.worker #tab-stock,.worker #tab-list,.worker #tab-trend{display:none!important}'; (document.head||document.documentElement).appendChild(st); })();
+  function applyRole(role){ /* returns true when a reload is needed */
+    try{
+      if (role==='seller'){ var ch=localStorage.getItem('wns-worker')!=='1' || localStorage.getItem('wns-admin'); localStorage.setItem('wns-worker','1'); localStorage.removeItem('wns-admin'); if (ch && !sessionStorage.getItem('se-rl')){ sessionStorage.setItem('se-rl','1'); return true; } }
+      else { var ch2=localStorage.getItem('wns-worker')==='1'; localStorage.removeItem('wns-worker'); localStorage.setItem('wns-admin', codeOf('wns-pin-'+PIN)); if (ch2 && !sessionStorage.getItem('se-rl')){ sessionStorage.setItem('se-rl','1'); return true; } }
+      sessionStorage.removeItem('se-rl');
+    }catch(e){}
+    return false;
+  }
   /* ---------- invite codes (one code = one Gmail + one phone) ---------- */
   function devId(){ var d=null; try{ d=localStorage.getItem('se-dev'); if (!d){ d=rid(); localStorage.setItem('se-dev', d); } }catch(e){ d='nodev'; } return d; }
   function hideCode(){ var b=document.getElementById('se-code'); if (b) b.remove(); }
@@ -175,7 +200,7 @@
     var v=document.getElementById('view-backup'); if (!v || document.getElementById('se-imp')) return;
     var c=el('<div class="card" id="se-imp"><h2>📥 استيراد البيانات القديمة</h2><p class="small" style="margin:0 0 8px">ختار الملف اللي تصدّر من التطبيق القديم (wash-nchriha-export.json). كيتزادو البيانات والفوطوات.</p>'+
       '<label class="btn btn-gold full" style="text-align:center;cursor:pointer">📂 ختار الملف<input type="file" accept="application/json,.json" style="display:none" id="se-imp-f"></label><p class="small" id="se-imp-s" style="margin:8px 0 0"></p>'+
-      '<h2 style="margin-top:16px">👥 شكون يقدر يدخل</h2><p class="small" style="margin:0 0 6px">زيد الإيميل (Gmail) ديال خوك ولا الخدام. كيدخل بـ «دخول بـ Gmail».</p><div style="display:flex;gap:6px"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><div id="se-st-l" class="small" style="margin-top:6px"></div>'+
+      '<h2 style="margin-top:16px">👑 شكون يشوف كلشي</h2><p class="small" style="margin:0 0 6px">زيد الـ Gmail ديال خوك: كيدخل بلا كود وكيشوف كلشي بحالك. اللي دخلو بكود كيكونو «👷 بائعين»: الشرا، السطوك، أثمان الشرا والربح مخبّيين عليهم، والرمز ديالك كيحل كلشي 10 دقايق.</p><div style="display:flex;gap:6px"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><div id="se-st-l" class="small" style="margin-top:6px"></div>'+
       '<div id="se-own" style="display:none"><h2 style="margin-top:16px">🔑 الكودات</h2><p class="small" style="margin:0 0 6px">كل كود كيخدم مرة وحدة: Gmail واحد وتيليفون واحد. ✕ كيحيّد الشخص (خاصو كود جديد).</p><div id="se-mem" class="small"></div><button type="button" class="btn btn-line full" id="se-newcode" style="margin-top:8px">➕ صاوب كود جديد</button><div id="se-codes" class="small" style="margin-top:6px;line-height:1.9"></div><h2 style="margin-top:16px">🤖 الذكاء الاصطناعي (Claude)</h2><p class="small" style="margin:0 0 6px" id="se-ai-st"></p><div style="display:flex;gap:6px"><input id="se-ai-k" type="password" placeholder="sk-ant-..." autocomplete="off" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-ai-save">💾</button></div><button type="button" class="btn btn-line full" id="se-ai-test" style="margin-top:6px">🧪 جرّب</button></div>'+
       '<p class="small" style="margin:10px 0 0;opacity:.7" id="se-me"></p><button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
     v.appendChild(c);
