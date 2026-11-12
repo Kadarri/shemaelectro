@@ -29,18 +29,32 @@
     '#se-login .er{color:#ff8a80;font-size:14px;min-height:20px;margin-top:8px}';
   css=css.replace(/#se-login([^{,]*)([{,])/g, function(m,sel,end){ return '#se-login'+sel+',#se-code'+sel+end; });
   function el(h){ var d=document.createElement('div'); d.innerHTML=h; return d.firstChild; }
+  function inApp(){ var u=navigator.userAgent||''; return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|Snapchat|TikTok|musical_ly|; wv\)/i.test(u); }
+  function openOut(){ var url=location.href.split('#')[0]; var and=/Android/i.test(navigator.userAgent||'');
+    var href=and?('intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end'):url;
+    return '<br><a href="'+href+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:#C9A227;color:#141413;font-weight:800;text-decoration:none">🌐 حل فـ Chrome</a><br><span style="font-size:12px;opacity:.8">ولا: ⋮ ← «Ouvrir dans Chrome / le navigateur»</span>'; }
   function showLogin(){
     if (document.getElementById('se-login')) return;
     var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
     var box=el('<div id="se-login"><div class="bx"><div class="lg">SE</div><h1>Shema Electro</h1><p>دخل بالحساب ديالك</p>'+
       '<input id="se-em" type="email" autocomplete="username" placeholder="Email"><input id="se-pw" type="password" autocomplete="current-password" placeholder="Mot de passe">'+
       '<button type="button" id="se-go">دخول</button><div style="margin:14px 0 4px;color:#7d776a;font-size:13px">ولا</div><button type="button" id="se-g" style="background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>دخول بـ Gmail</button><div class="er" id="se-er"></div></div></div>');
+    if (inApp()){ setTimeout(function(){ var e=document.getElementById('se-er'); if (e && !e.textContent) e.innerHTML='ℹ️ نتا داخل من واتساب ولا فيسبوك. باش تدخل بـ Gmail، حل الرابط فـ Chrome:'+openOut(); },0); }
     if (window.__seDenied){ setTimeout(function(){ var e=document.getElementById('se-er'); if (e) e.textContent=window.__seDenied; },0); }
     (document.body||document.documentElement).appendChild(box);
     function go(){ var em=document.getElementById('se-em').value.trim(), pw=document.getElementById('se-pw').value; var er=document.getElementById('se-er'); er.textContent='⏳';
       auth.signInWithEmailAndPassword(em,pw).catch(function(e){ var c=(e&&e.code)||''; er.textContent=/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c)?'الإيميل ولا كلمة السر غالطين':(/too-many/.test(c)?'بزاف ديال المحاولات، تسنى شوية':(/network/.test(c)?'ما كاينش الأنترنيت':'ما دخلش: '+c)); }); }
     box.querySelector('#se-go').addEventListener('click', go);
-    box.querySelector('#se-g').addEventListener('click', function(){ var er=document.getElementById('se-er'); er.textContent='⏳'; var pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'}); auth.signInWithPopup(pr).catch(function(e){ var c=(e&&e.code)||''; if (/popup-blocked|operation-not-supported|web-storage/.test(c)) return auth.signInWithRedirect(pr); er.textContent=/popup-closed|cancelled/.test(c)?'':'ما دخلش: '+c; }); });
+    box.querySelector('#se-g').addEventListener('click', function(){ var er=document.getElementById('se-er');
+      if (inApp()){ er.innerHTML='⚠️ Google ما كيخليش الدخول من داخل واتساب/فيسبوك/إنستغرام.<br>حل الرابط فـ <b>Chrome</b>:'+openOut(); return; }
+      er.textContent='⏳'; var pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'});
+      auth.signInWithPopup(pr).catch(function(e){ var c=(e&&e.code)||'';
+        if (/popup-closed|cancelled-popup/.test(c)){ er.textContent=''; return; }
+        if (/popup-blocked/.test(c)){ er.innerHTML='⚠️ المتصفح بلوكا النافذة ديال Google. عاود كليكي على «دخول بـ Gmail»، ولا سمح بالـ pop-ups لهاد الموقع.'; return; }
+        if (/unauthorized-domain/.test(c)){ er.textContent='⚠️ هاد الرابط ماشي مسموح. حل: kadarri.github.io/shemaelectro/app'; return; }
+        if (/network/.test(c)){ er.textContent='⚠️ ما كاينش الأنترنيت'; return; }
+        if (/operation-not-supported|web-storage-unsupported/.test(c)){ er.innerHTML='⚠️ هاد المتصفح ما كيدعمش الدخول. حل الرابط فـ <b>Chrome</b>:'+openOut(); return; }
+        er.textContent='ما دخلش: '+c; }); });
     box.querySelector('#se-pw').addEventListener('keydown', function(e){ if (e.key==='Enter') go(); });
   }
   function hideLogin(){ var b=document.getElementById('se-login'); if (b) b.remove(); }
@@ -66,7 +80,7 @@
       fs.doc('settings/main').get({source:'server'}).catch(function(e){ return e; }).then(function(r){
         if (r && r.code==='permission-denied'){ showCode(u); return; }
         return fs.doc('members/'+u.uid).get().catch(function(){ return null; }).then(function(m){
-          if (m && m.exists && m.data().dev && m.data().dev!==devId()){ try{ sessionStorage.setItem('se-denied','📵 هاد الحساب مربوط بتيليفون آخر. طلب من مول المحل يعطيك كود جديد.'); }catch(x){} auth.signOut(); return; }
+          /* same Gmail may be used on phone and computer: no device lock */
           return roleOf(u).then(function(role){
             window.SE.role=role;
             if (applyRole(role)) { location.reload(); return; }
