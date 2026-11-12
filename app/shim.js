@@ -3,6 +3,8 @@
   var CFG={apiKey:"AIzaSyDq-9621rLb7KaCx6ruXuNVPS7nSXDSXz0",authDomain:"united-yeti-472800-n6.firebaseapp.com",projectId:"united-yeti-472800-n6",storageBucket:"united-yeti-472800-n6.firebasestorage.app",messagingSenderId:"481171214396",appId:"1:481171214396:web:b5a7a949bb7ed867da3339"};
   var APP_VER=(function(){ try{ return new URL(document.currentScript.src).searchParams.get('v')||'0'; }catch(e){ return '0'; } })();
   firebase.initializeApp(CFG);
+  function seOut(why){ try{ localStorage.setItem('se-why', why+' @ '+new Date().toLocaleString()); }catch(e){} return auth.signOut(); }
+
   var auth=firebase.auth(), fs=firebase.firestore();
   try{ fs.settings({ignoreUndefinedProperties:true, merge:true}); }catch(e){}
   try{ fs.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){}
@@ -40,6 +42,7 @@
       '<input id="se-em" type="email" autocomplete="username" placeholder="Email"><input id="se-pw" type="password" autocomplete="current-password" placeholder="Mot de passe">'+
       '<button type="button" id="se-go">دخول</button><div style="margin:14px 0 4px;color:#7d776a;font-size:13px">ولا</div><button type="button" id="se-g" style="background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>دخول بـ Gmail</button><div class="er" id="se-er"></div></div></div>');
     if (inApp()){ setTimeout(function(){ var e=document.getElementById('se-er'); if (e && !e.textContent) e.innerHTML='ℹ️ نتا داخل من واتساب ولا فيسبوك. باش تدخل بـ Gmail، حل الرابط فـ Chrome:'+openOut(); },0); }
+    try{ var w=localStorage.getItem('se-why'); var ft=document.createElement('div'); ft.style.cssText='margin-top:10px;font-size:11px;color:#7d776a;direction:ltr'; ft.textContent='v'+APP_VER+(w?' · last logout: '+w:''); box.querySelector('.bx').appendChild(ft); }catch(e){}
     if (window.__seDenied){ setTimeout(function(){ var e=document.getElementById('se-er'); if (e) e.textContent=window.__seDenied; },0); }
     (document.body||document.documentElement).appendChild(box);
     function go(){ var em=document.getElementById('se-em').value.trim(), pw=document.getElementById('se-pw').value; var er=document.getElementById('se-er'); er.textContent='⏳';
@@ -63,20 +66,8 @@
   auth.onAuthStateChanged(function(u){
     if (u){
       var oldV=null; try{ oldV=localStorage.getItem('se-ver'); }catch(e){}
-      /* only a NEWER version logs people out once (a cached older page must never log out) */
-      if ((+APP_VER||0) > (+oldV||0)){
-        /* never lose data: only sign out when online and every pending write is saved on the server */
-        if (navigator.onLine===false){ /* offline: keep working, log out next time */ }
-        else {
-          var to=new Promise(function(r){ setTimeout(function(){ r('timeout'); }, 8000); });
-          Promise.race([(fs.waitForPendingWrites?fs.waitForPendingWrites():Promise.resolve()).then(function(){ return 'ok'; }, function(){ return 'err'; }), to]).then(function(res){
-            if (res!=='ok'){ window.__seSkipVer=1; go2(); return; } /* still saving: keep working, log out on a later load */
-            try{ localStorage.setItem('se-ver', APP_VER); sessionStorage.setItem('se-denied','🔄 التطبيق تحدّث. دخل من جديد.'); }catch(e){}
-            auth.signOut();
-          });
-          return;
-        }
-      }
+      /* updates never log anyone out any more (it caused repeated logouts); just remember the version */
+      try{ if ((+APP_VER||0) > (+localStorage.getItem('se-ver')||0)) localStorage.setItem('se-ver', APP_VER); }catch(e){}
       function go2(){
       fs.doc('settings/main').get({source:'server'}).catch(function(e){ return e; }).then(function(r){
         if (r && r.code==='permission-denied'){ showCode(u); return; }
@@ -95,7 +86,7 @@
     else { try{ if ((+APP_VER||0) > (+localStorage.getItem('se-ver')||0)) localStorage.setItem('se-ver', APP_VER); }catch(e){} try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
   });
   auth.onIdTokenChanged(function(){ postToken(); });
-  window.seLogout=function(){ auth.signOut(); };
+  window.seLogout=function(){ seOut('manual'); };
 
 
 
@@ -132,7 +123,7 @@
       '<input id="se-cd" placeholder="SE-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px;text-align:center">'+
       '<button type="button" id="se-cd-go">✅ تأكيد</button><button type="button" id="se-cd-out" style="background:transparent;color:#bdb6a6;border:1px solid #3a3a36">🚪 خروج / حساب آخر</button><div class="er" id="se-cd-er"></div></div></div>');
     box.id='se-code'; (document.body||document.documentElement).appendChild(box);
-    box.querySelector('#se-cd-out').addEventListener('click', function(){ auth.signOut(); });
+    box.querySelector('#se-cd-out').addEventListener('click', function(){ seOut('code-screen'); });
     function go(){ var code=(box.querySelector('#se-cd').value||'').trim().toUpperCase().replace(/\s+/g,''); var er=box.querySelector('#se-cd-er');
       if (!/^SE-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){ er.textContent='الكود خاصو يكون بحال SE-XXXX-XXXX'; return; }
       er.textContent='⏳'; var now=Date.now(), dev=devId();
@@ -240,7 +231,7 @@
     var c=el('<div class="card" id="se-imp"><h2>👤 الحساب</h2><p class="small" style="margin:0">داخل بـ: <b style="direction:ltr;display:inline-block">'+esc2(me&&me.email)+'</b> · '+(role==='owner'?'👑 المول':role==='full'?'👑 كيشوف كلشي':'👷 بائع')+'</p>'+
       '<button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
     v.appendChild(c);
-    c.querySelector('#se-out').addEventListener('click', function(){ auth.signOut(); });
+    c.querySelector('#se-out').addEventListener('click', function(){ seOut('button'); });
     if (role!=='owner') return;
     var o=el('<div class="card" id="se-own">'+
       '<h2>👥 الناس والصلاحيات</h2><p class="small" style="margin:0 0 6px"><b>👑 كلشي</b>: كيشوف ويبدّل كلشي بحالك. <b>👷 بائع</b>: البيع والكريدي والزبناء فقط (الشرا، السطوك، أثمان الشرا والربح مخبّيين).</p>'+

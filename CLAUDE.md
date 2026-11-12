@@ -8,5 +8,6 @@
 ## Never lose data
 - App data lives in Firestore (project united-yeti-472800-n6). Code updates must never delete, overwrite or migrate
   existing documents, never call clearPersistence(), never clear localStorage keys starting with `wns-` or `se-`.
-- A version bump signs everyone out (shim.js, APP_VER from `shim.js?v=N`), but only after `waitForPendingWrites()` succeeds.
+- Updates must NEVER sign anyone out (forced logout on update caused repeated logouts and was removed on purpose). The only
+  sign-outs are the manual buttons; each one records its reason in localStorage `se-why`, shown on the login screen.
 - Build the app with `python3 build_app.py <N>` (copies the Claude artifact app and injects shim.js); bump N on every release.
