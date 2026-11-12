@@ -63,7 +63,8 @@
   auth.onAuthStateChanged(function(u){
     if (u){
       var oldV=null; try{ oldV=localStorage.getItem('se-ver'); }catch(e){}
-      if (oldV!==APP_VER){
+      /* only a NEWER version logs people out once (a cached older page must never log out) */
+      if ((+APP_VER||0) > (+oldV||0)){
         /* never lose data: only sign out when online and every pending write is saved on the server */
         if (navigator.onLine===false){ /* offline: keep working, log out next time */ }
         else {
@@ -91,7 +92,7 @@
           }
       go2();
     }
-    else { try{ localStorage.setItem('se-ver', APP_VER); }catch(e){} try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
+    else { try{ if ((+APP_VER||0) > (+localStorage.getItem('se-ver')||0)) localStorage.setItem('se-ver', APP_VER); }catch(e){} try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
   });
   auth.onIdTokenChanged(function(){ postToken(); });
   window.seLogout=function(){ auth.signOut(); };
