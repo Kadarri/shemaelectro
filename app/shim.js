@@ -1,6 +1,7 @@
 /* Shema Electro – standalone platform layer (Firebase) */
 (function(){
   var CFG={apiKey:"AIzaSyDq-9621rLb7KaCx6ruXuNVPS7nSXDSXz0",authDomain:"united-yeti-472800-n6.firebaseapp.com",projectId:"united-yeti-472800-n6",storageBucket:"united-yeti-472800-n6.firebasestorage.app",messagingSenderId:"481171214396",appId:"1:481171214396:web:b5a7a949bb7ed867da3339"};
+  var APP_VER=(function(){ try{ return new URL(document.currentScript.src).searchParams.get('v')||'0'; }catch(e){ return '0'; } })();
   firebase.initializeApp(CFG);
   var auth=firebase.auth(), fs=firebase.firestore();
   try{ fs.settings({ignoreUndefinedProperties:true, merge:true}); }catch(e){}
@@ -47,6 +48,8 @@
   var wasIn=null;
   auth.onAuthStateChanged(function(u){
     if (u){
+      var oldV=null; try{ oldV=localStorage.getItem('se-ver'); }catch(e){}
+      if (oldV!==APP_VER){ try{ localStorage.setItem('se-ver', APP_VER); sessionStorage.setItem('se-denied','🔄 التطبيق تحدّث. دخل من جديد.'); }catch(e){} auth.signOut(); return; }
       fs.doc('settings/main').get({source:'server'}).catch(function(e){ return e; }).then(function(r){
         if (r && r.code==='permission-denied'){ showCode(u); return; }
         return fs.doc('members/'+u.uid).get().catch(function(){ return null; }).then(function(m){
@@ -59,7 +62,7 @@
         });
       });
     }
-    else { try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
+    else { try{ localStorage.setItem('se-ver', APP_VER); }catch(e){} try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
   });
   auth.onIdTokenChanged(function(){ postToken(); });
   window.seLogout=function(){ auth.signOut(); };
