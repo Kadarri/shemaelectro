@@ -49,7 +49,20 @@
   auth.onAuthStateChanged(function(u){
     if (u){
       var oldV=null; try{ oldV=localStorage.getItem('se-ver'); }catch(e){}
-      if (oldV!==APP_VER){ try{ localStorage.setItem('se-ver', APP_VER); sessionStorage.setItem('se-denied','🔄 التطبيق تحدّث. دخل من جديد.'); }catch(e){} auth.signOut(); return; }
+      if (oldV!==APP_VER){
+        /* never lose data: only sign out when online and every pending write is saved on the server */
+        if (navigator.onLine===false){ /* offline: keep working, log out next time */ }
+        else {
+          var to=new Promise(function(r){ setTimeout(function(){ r('timeout'); }, 8000); });
+          Promise.race([(fs.waitForPendingWrites?fs.waitForPendingWrites():Promise.resolve()).then(function(){ return 'ok'; }, function(){ return 'err'; }), to]).then(function(res){
+            if (res!=='ok'){ window.__seSkipVer=1; go2(); return; } /* still saving: keep working, log out on a later load */
+            try{ localStorage.setItem('se-ver', APP_VER); sessionStorage.setItem('se-denied','🔄 التطبيق تحدّث. دخل من جديد.'); }catch(e){}
+            auth.signOut();
+          });
+          return;
+        }
+      }
+      function go2(){
       fs.doc('settings/main').get({source:'server'}).catch(function(e){ return e; }).then(function(r){
         if (r && r.code==='permission-denied'){ showCode(u); return; }
         return fs.doc('members/'+u.uid).get().catch(function(){ return null; }).then(function(m){
@@ -61,6 +74,8 @@
           });
         });
       });
+          }
+      go2();
     }
     else { try{ localStorage.setItem('se-ver', APP_VER); }catch(e){} try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
   });

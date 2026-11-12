@@ -1,0 +1,12 @@
+# Shema Electro – rules for Claude
+
+## Updates (deploy rule from the owner)
+- Never push, publish or deploy any change (this repo, GitHub Pages, the Firebase rules/console, or the Claude artifact
+  "واش نشريها؟" 2d4dd4fd-e6e3-4b76-aaa2-41548505028a) unless the owner's **current** chat message contains the text `1998`.
+- Without `1998`: prepare and test the change locally, explain it, and ask the owner to write 1998 to release it.
+
+## Never lose data
+- App data lives in Firestore (project united-yeti-472800-n6). Code updates must never delete, overwrite or migrate
+  existing documents, never call clearPersistence(), never clear localStorage keys starting with `wns-` or `se-`.
+- A version bump signs everyone out (shim.js, APP_VER from `shim.js?v=N`), but only after `waitForPendingWrites()` succeeds.
+- Build the app with `python3 build_app.py <N>` (copies the Claude artifact app and injects shim.js); bump N on every release.
