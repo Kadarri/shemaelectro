@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="shim.js?v=14"></script>
+<script src="shim.js?v=15"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#141413">
@@ -6069,7 +6069,7 @@ textarea{min-height:70px;resize:vertical}
     var el=$('diag'); if(!el) return;
     var bf=(typeof badFeeds==='function')?badFeeds():[];
     if (bf.length && !diag.err) diag.err=bf.map(function(f){return f.name;}).slice(0,4).join('، ')+' ('+bf[0].err+')';
-    var vtag=' · v75'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
+    var vtag=' · v76'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
     var t = diag.err ? '⚠️ مشكلة في قراءة البيانات: '+diag.err : (diag.at ? '🔄 '+records.length+' ثمن · '+sales.length+' بيع · '+((typeof clients!=='undefined'&&clients)?clients.length:0)+' زبون · آخر تحديث '+new Date(diag.at).toLocaleTimeString('ar-MA',{hour:'2-digit',minute:'2-digit'}) : '⏳ جاري تحميل البيانات...');
     el.querySelector('span').textContent=t+vtag; el.classList.toggle('err', !!diag.err);
   }
@@ -7425,6 +7425,27 @@ textarea{min-height:70px;resize:vertical}
     Object.keys(KEEP).forEach(function(v){ var sec=$('view-'+v); if (sec) mo.observe(sec,{childList:true}); });
     var _show75=show; show=function(){ var r=_show75.apply(this,arguments); try{ mark(); }catch(e){} return r; };
     mark();
+  })();
+  /* ----- PART 76: 🧹 simple buying — step by step, only what is needed ----- */
+  (function(){
+    var S='body.simple:not(.simple-open) ';
+    var st=document.createElement('style');
+    st.textContent=S+'#ai-btn,'+S+'#live-buy,'+S+'#bc-gen,'+S+'.bu-x{display:none!important}'+
+      S+'#photo-prev:not(:has(img)){display:none!important}'+
+      'body.simple:not(.simple-open):not(.bu-started) .bu-step2{display:none!important}body.simple:not(.simple-open) #verdict.empty{display:none!important}';
+    document.head.appendChild(st);
+    try{ var g=$('photo-gal'); if (g) g.closest('label').classList.add('bu-x'); }catch(e){}
+    try{ var d1=$('cat').closest('details'); if (d1) d1.classList.add('bu-x'); }catch(e){}
+    try{ var c2=$('seller').closest('.card'); c2.querySelectorAll(':scope > details').forEach(function(d){ d.classList.add('bu-x'); }); c2.classList.add('bu-step2'); }catch(e){}
+    try{ var v=$('view-buy'); Array.prototype.forEach.call(v.children, function(c){ var h=(c.querySelector('h2')||{}).textContent||''; if (c.id==='verdict' || /^\s*[3-5]\./.test(h)) c.classList.add('bu-step2'); }); }catch(e){}
+    function started(){ var on=!!(($('name').value||'').trim() || ($('seller').value||'').trim() || document.querySelector('#photo-prev img')); document.body.classList.toggle('bu-started', on); }
+    ['name','seller','barcode'].forEach(function(id){ var e=$(id); if (e) e.addEventListener('input', started); });
+    var ph=$('photo'); if (ph) ph.addEventListener('change', function(){ setTimeout(started, 300);
+      if (document.body.classList.contains('simple') && sample && this.files && this.files.length){ setTimeout(function(){ try{ $('ai-btn').click(); }catch(e){} }, 1500); } });
+    var pg=$('photo-gal'); if (pg) pg.addEventListener('change', function(){ setTimeout(started, 300); });
+    if (typeof resetForm==='function'){ var _rf76=resetForm; resetForm=function(){ var r=_rf76.apply(this,arguments); setTimeout(started,50); return r; }; }
+    setInterval(function(){ if (!$('view-buy').classList.contains('hidden')) started(); }, 1500);
+    started();
   })();
   var _cmp52=compute; compute=function(){ var r=_cmp52.apply(this,arguments); psLater(); return r; };
   renderPS();
