@@ -94,7 +94,7 @@ main{padding:14px 12px 90px}
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function norm(s){ return String(s||'').toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ً-ْ]/g,''); }
   function wa(text){ var p=(data&&data.shop&&data.shop.phone)||''; return 'https://wa.me/'+p+'?text='+encodeURIComponent(text); }
-  function imgSrc(it){ if (it.ph) return (window.SHOP_IMG?window.SHOP_IMG(it.ph):'img/'+encodeURIComponent(it.ph)+'.jpg'); return it.w||''; }
+  function imgSrc(it){ if (it.ph){ var s=window.SHOP_IMG?window.SHOP_IMG(it.ph):''; if (s) return s; } return it.w||''; }
   function ago(t){ if (!t) return ''; var m=Math.round((Date.now()-t)/60000); if (m<2) return 'دابا'; if (m<60) return 'هادي '+m+' دقيقة'; var h=Math.round(m/60); if (h<24) return 'هادي '+h+' ساعة'; return 'هادي '+Math.round(h/24)+' يوم'; }
   function card(it){
     var st=it.s, src=imgSrc(it), name=data.shop.name||'المحل';
@@ -139,7 +139,15 @@ main{padding:14px 12px 90px}
   $('only').addEventListener('change', function(){ only=this.checked; render(); });
   function setData(d){ if (!d) return; data=d; data.shop=data.shop||{}; data.items=data.items||[]; render(); }
   if (window.SHOP_DATA){ setData(window.SHOP_DATA); return; }
-  setData({shop:{name:'Shema Electro',addr:'ويسلان، مكناس'},items:[]});
+  var FS='https://firestore.googleapis.com/v1/projects/united-yeti-472800-n6/databases/(default)/documents/', KEY='AIzaSyDq-9621rLb7KaCx6ruXuNVPS7nSXDSXz0';
+  function fv(v){ if (!v) return null; if ('stringValue' in v) return v.stringValue; if ('integerValue' in v) return +v.integerValue; if ('doubleValue' in v) return v.doubleValue; if ('booleanValue' in v) return v.booleanValue; if ('nullValue' in v) return null; if ('timestampValue' in v) return Date.parse(v.timestampValue);
+    if ('arrayValue' in v) return (v.arrayValue.values||[]).map(fv); if ('mapValue' in v){ var o={}, f=v.mapValue.fields||{}; Object.keys(f).forEach(function(k){ o[k]=fv(f[k]); }); return o; } return null; }
+  var IMG={};
+  window.SHOP_IMG=function(id){ return IMG[id]||''; };
+  function loadImgs(items){ items.forEach(function(it){ if (!it.ph || IMG[it.ph]!==undefined) return; IMG[it.ph]=''; fetch(FS+'webimg/'+encodeURIComponent(it.ph)+'?key='+KEY).then(function(r){ return r.ok?r.json():null; }).then(function(j){ var d=j&&j.fields&&j.fields.d&&j.fields.d.stringValue; if (d){ IMG[it.ph]=d; render(); } }).catch(function(){}); }); }
+  function pull(){ fetch(FS+'webcat/main?key='+KEY).then(function(r){ return r.ok?r.json():null; }).then(function(j){ if (!j||!j.fields) return; var o={}; Object.keys(j.fields).forEach(function(k){ o[k]=fv(j.fields[k]); }); if (!data || o.at!==data.at){ setData(o); loadImgs(o.items||[]); } }).catch(function(){}); }
+  if (window.SHOP_DATA && window.SHOP_DATA.items && window.SHOP_DATA.items.length) setData(window.SHOP_DATA); else setData({shop:{name:'Shema Electro',addr:'ويسلان، مكناس'},items:[]});
+  pull(); setInterval(pull, 60000);
 })();
 </script>
 </body>
