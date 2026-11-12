@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="shim.js?v=13"></script>
+<script src="shim.js?v=14"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#141413">
@@ -6069,7 +6069,7 @@ textarea{min-height:70px;resize:vertical}
     var el=$('diag'); if(!el) return;
     var bf=(typeof badFeeds==='function')?badFeeds():[];
     if (bf.length && !diag.err) diag.err=bf.map(function(f){return f.name;}).slice(0,4).join('، ')+' ('+bf[0].err+')';
-    var vtag=' · v74'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
+    var vtag=' · v75'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
     var t = diag.err ? '⚠️ مشكلة في قراءة البيانات: '+diag.err : (diag.at ? '🔄 '+records.length+' ثمن · '+sales.length+' بيع · '+((typeof clients!=='undefined'&&clients)?clients.length:0)+' زبون · آخر تحديث '+new Date(diag.at).toLocaleTimeString('ar-MA',{hour:'2-digit',minute:'2-digit'}) : '⏳ جاري تحميل البيانات...');
     el.querySelector('span').textContent=t+vtag; el.classList.toggle('err', !!diag.err);
   }
@@ -7400,6 +7400,31 @@ textarea{min-height:70px;resize:vertical}
       $('simple-tg').addEventListener('change', function(){ try{ localStorage.setItem('wns-simple', this.checked?'1':'0'); }catch(e){} document.body.classList.remove('simple-open'); apply(); }); }
     document.addEventListener('click', function(e){ var g=e.target.closest&&e.target.closest('[data-go],nav button,[id^="tab-"]'); if (g) { document.body.classList.remove('simple-open'); apply(); } }, true);
     apply();
+  })();
+  /* ----- PART 75: 🧹 simple screen everywhere (keep only the main blocks of each page) ----- */
+  (function(){
+    var KEEP={
+      home:function(c,h){ return c.classList.contains('home-grid'); },
+      buy:function(c,h){ return c.id==='verdict' || /^\s*[1-5]\./.test(h); },
+      stock:function(c,h){ return c.id==='st-list' || h.indexOf('📦 المخزون')===0; },
+      list:function(c,h){ return h.indexOf('📋 أضف')===0 || h.indexOf('🛒 ما يجب')===0; },
+      trend:function(c,h){ return c.id==='tr-body' || h.indexOf('🔥')===0; }
+    };
+    function head(c){ var e=c.querySelector('h2,summary'); return ((e&&e.textContent)||'').trim(); }
+    function mark(){
+      Object.keys(KEEP).forEach(function(v){ var sec=$('view-'+v); if (!sec) return;
+        Array.prototype.forEach.call(sec.children, function(c){ if (c.classList.contains('simple-more-wrap')) return; c.classList.toggle('simple-x', !KEEP[v](c, head(c))); });
+        if (!sec.querySelector(':scope > .simple-more-wrap')){ var w=document.createElement('div'); w.className='simple-more-wrap'; w.innerHTML='<button type="button" class="btn btn-line full simple-more-any">⋯ أدوات أخرى</button>'; sec.appendChild(w); }
+        else sec.appendChild(sec.querySelector(':scope > .simple-more-wrap'));
+      });
+      document.querySelectorAll('.simple-more-any').forEach(function(b){ b.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; });
+    }
+    var st=document.createElement('style'); st.textContent='.simple-more-wrap{display:none;margin:4px 0 12px}body.simple .simple-more-wrap{display:block}body.simple:not(.simple-open) #st-list .li-main > .li-meta,body.simple:not(.simple-open) #st-list .ins-row,body.simple:not(.simple-open) #st-list .li-main > .sh-bar,body.simple:not(.simple-open) #st-list [data-shgo],body.simple:not(.simple-open) #st-list [data-webt],body.simple:not(.simple-open) #st-list [data-bxgo],body.simple:not(.simple-open) #st-list input[data-lb],body.simple:not(.simple-open) #ps-box,body.simple:not(.simple-open) .ask-box,body.simple:not(.simple-open) details[data-fold="buy-post"],body.simple:not(.simple-open) #bu-box{display:none!important}'; document.head.appendChild(st);
+    document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.simple-more-any'); if (!b) return; document.body.classList.toggle('simple-open'); mark(); var sm=$('simple-more'); if (sm) sm.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; if (document.body.classList.contains('simple-open')) window.scrollTo({top:0,behavior:'smooth'}); });
+    var t=null; var mo=new MutationObserver(function(){ clearTimeout(t); t=setTimeout(mark, 120); });
+    Object.keys(KEEP).forEach(function(v){ var sec=$('view-'+v); if (sec) mo.observe(sec,{childList:true}); });
+    var _show75=show; show=function(){ var r=_show75.apply(this,arguments); try{ mark(); }catch(e){} return r; };
+    mark();
   })();
   var _cmp52=compute; compute=function(){ var r=_cmp52.apply(this,arguments); psLater(); return r; };
   renderPS();
