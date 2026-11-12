@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="shim.js?v=12"></script>
+<script src="shim.js?v=13"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#141413">
@@ -2755,7 +2755,7 @@ textarea{min-height:70px;resize:vertical}
     if (typeof saBadge==='function') try{ saBadge(); }catch(e){}
     if (typeof crLeft==='function') try{ crLeft(); }catch(e){}
     var box=$('cart');
-    if (!cart.length){ $('cart-bar').classList.add('hidden'); if (typeof renderTiles==='function' && !$('mm-grid-box').classList.contains('hidden')) renderTiles(); box.innerHTML='<p class="small" style="margin:0">السلة فارغة. اكتب اسم القطعة فوق واضغط <b>➕ أضف للسلة</b> (أو امسح الباركود). بعدها تظهر هنا: <b>خانة ثمن البيع</b>، وأزرار الأثمان الجاهزة (مثلًا 19 · 18 · 17)، وخانة <b>💵 كم دفع الزبون</b>.</p>'; $('cart-total').classList.add('hidden'); $('cart-done').classList.add('hidden'); $('cart-warn').classList.add('hidden'); return; }
+    if (!cart.length){ $('cart-bar').classList.add('hidden'); if (typeof renderTiles==='function' && !$('mm-grid-box').classList.contains('hidden')) renderTiles(); box.innerHTML='<p class="small empty-cart-hint" style="margin:0">السلة فارغة. اكتب اسم القطعة فوق واضغط <b>➕ أضف للسلة</b> (أو امسح الباركود). بعدها تظهر هنا: <b>خانة ثمن البيع</b>، وأزرار الأثمان الجاهزة (مثلًا 19 · 18 · 17)، وخانة <b>💵 كم دفع الزبون</b>.</p>'; $('cart-total').classList.add('hidden'); $('cart-done').classList.add('hidden'); $('cart-warn').classList.add('hidden'); return; }
     cart.forEach(function(l){
       if (l.cost==null){ var c=costOf(l.nameKey); if (c!=null) l.cost=c; }
       if (typeof activeOffer==='function') l._offerHint=null;
@@ -7374,18 +7374,22 @@ textarea{min-height:70px;resize:vertical}
   (function(){
     var st=document.createElement('style');
     st.textContent='body.simple:not(.simple-open) #diag,body.simple:not(.simple-open) #task-bar,body.simple:not(.simple-open) #sa-modes,body.simple:not(.simple-open) #qr-card,body.simple:not(.simple-open) #rq-alert,body.simple:not(.simple-open) .simple-x{display:none!important}'+
-      '#simple-big{display:none!important}body.simple #simple-big{display:grid!important}#simple-bar{display:none;margin:4px 0 12px}body.simple #simple-bar{display:flex;gap:8px}#simple-bar .btn{flex:1}';
+      'body.simple .simple-hide{display:none!important}body.simple:not(.typing) .simple-type{display:none!important}body.simple .empty-cart-hint{display:none!important}body.simple .cart-line:not(.xopen) .sens,body.simple .cart-line:not(.xopen) .xinfo,body.simple .cart-line:not(.xopen) .xinfo-b{display:none!important}body.simple .xbtn{display:inline-flex!important}body.simple:not(.typing):not(.cart-has):not(.simple-open) .sell-card{display:none!important}body.simple:not(.simple-open) #csc-open,body.simple:not(.simple-open) #csc-win,body.simple:not(.simple-open) #csc-hide{display:none!important}#simple-big{display:none!important}body.simple #simple-big{display:grid!important}#simple-bar{display:none;margin:4px 0 12px}body.simple #simple-bar{display:flex;gap:8px}#simple-bar .btn{flex:1}';
     document.head.appendChild(st);
     try{ var mg=$('mm-grid'); if (mg){ mg.parentNode.classList.add('simple-x'); var pt=mg.parentNode.previousElementSibling; if (pt && pt.classList.contains('pick-title')) pt.classList.add('simple-x'); } }catch(e){}
     var bar=document.createElement('div'); bar.id='simple-bar';
     bar.innerHTML='<button type="button" class="btn btn-line" id="simple-more">⋯ أدوات أخرى</button>';
     var sell=$('scan-in')&&$('scan-in').closest('.card'); if (sell) sell.after(bar);
+    if (sell) sell.classList.add('sell-card');
+    try{ var _rc74=renderCart; renderCart=function(){ var r=_rc74.apply(this,arguments); document.body.classList.toggle('cart-has', cart.length>0); return r; }; document.body.classList.toggle('cart-has', cart.length>0); }catch(e){}
+    if (sell){ try{ var h=sell.querySelector('h2'); if (h) h.classList.add('simple-hide'); var lb=sell.querySelector('label[for="scan-in"]'); if (lb) lb.classList.add('simple-hide'); var ls=$('live-sale'); if (ls) ls.closest('.row').classList.add('simple-hide'); $('scan-in').classList.add('simple-type'); }catch(e){} }
     if (sell){ var big=document.createElement('div'); big.id='simple-big'; big.style.cssText='display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 12px';
       big.innerHTML='<button type="button" class="btn btn-dark" id="sb-type" style="flex-direction:column;gap:4px;min-height:84px;font-size:15px"><span style="font-size:28px">⌨️</span>اكتب الباركود</button>'+
         '<button type="button" class="btn btn-gold" id="sb-bar" style="flex-direction:column;gap:4px;min-height:84px;font-size:15px"><span style="font-size:28px">📷</span>صوّر الباركود</button>'+
         '<button type="button" class="btn btn-dark" id="sb-prod" style="flex-direction:column;gap:4px;min-height:84px;font-size:15px"><span style="font-size:28px">📸</span>صوّر القطعة</button>';
       var vs=$('view-sales'), sm=$('sa-modes'); if (sm) sm.after(big); else vs.insertBefore(big, vs.firstChild);
-      $('sb-type').addEventListener('click', function(){ try{ applySaMode('sell'); }catch(e){} var i=$('scan-in'); i.scrollIntoView({block:'center'}); i.focus(); });
+      $('sb-type').addEventListener('click', function(){ try{ applySaMode('sell'); }catch(e){} document.body.classList.add('typing'); var i=$('scan-in'); i.scrollIntoView({block:'center'}); i.focus(); });
+      $('scan-in').addEventListener('blur', function(){ var me=this; setTimeout(function(){ if (!me.value && document.activeElement!==me) document.body.classList.remove('typing'); }, 300); });
       $('sb-bar').addEventListener('click', function(){ try{ applySaMode('sell'); }catch(e){} $('scan-photo-sale').click(); });
       $('sb-prod').addEventListener('click', function(){ try{ applySaMode('price'); }catch(e){} $('pc-photo').click(); setTimeout(function(){ var c=$('pc-name').closest('.card'); if (c) c.scrollIntoView({block:'start'}); },300); });
     }
