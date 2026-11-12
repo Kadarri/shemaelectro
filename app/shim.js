@@ -57,7 +57,7 @@
           return roleOf(u).then(function(role){
             window.SE.role=role;
             if (applyRole(role)) { location.reload(); return; }
-            hideLogin(); hideCode(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs();
+            hideLogin(); hideCode(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs(); setTimeout(addCard,0);
           });
         });
       });
@@ -74,7 +74,10 @@
   function codeOf(nk){ var h=5381; for (var i=0;i<nk.length;i++){ h=((h<<5)+h+nk.charCodeAt(i))>>>0; } return h.toString(36); }
   function roleOf(u){
     return fs.collection('codes').limit(1).get().then(function(){ return 'owner'; }, function(){
-      return fs.doc('staff/'+String(u.email||'').toLowerCase()).get().then(function(d){ return d.exists?'full':'seller'; }, function(){ return 'seller'; });
+      return fs.doc('staff/'+String(u.email||'').toLowerCase()).get().then(function(d){
+        if (d.exists) return d.data().role==='seller'?'seller':'full';
+        return fs.doc('members/'+u.uid).get().then(function(m){ return (m.exists && m.data().role==='full')?'full':'seller'; }, function(){ return 'seller'; });
+      }, function(){ return 'seller'; });
     }).then(function(role){
       var h=codeOf('wns-pin-'+PIN); fs.doc('settings/extra').get().then(function(x){ var cur=x.exists&&x.data().pinH; if (role==='owner' ? cur!==h : !cur) fs.doc('settings/extra').set({pinH:h},{merge:true}); }).catch(function(){});
       return role;
@@ -198,41 +201,51 @@
       return next().then(function(){ return {ok:okN, all:all, bad:bad}; });
     });
   }
+  function esc2(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function roleSel(cur, attr){ return '<select '+attr+' style="width:auto;padding:4px 6px;font-size:13px"><option value="full"'+(cur==='full'?' selected':'')+'>👑 كلشي</option><option value="seller"'+(cur!=='full'?' selected':'')+'>👷 بائع</option></select>'; }
   function addCard(){
-    var ex=document.getElementById('exp-card'); if (ex) ex.remove();
-    var v=document.getElementById('view-backup'); if (!v || document.getElementById('se-imp')) return;
-    var c=el('<div class="card" id="se-imp"><h2>📥 استيراد البيانات القديمة</h2><p class="small" style="margin:0 0 8px">ختار الملف اللي تصدّر من التطبيق القديم (wash-nchriha-export.json). كيتزادو البيانات والفوطوات.</p>'+
-      '<label class="btn btn-gold full" style="text-align:center;cursor:pointer">📂 ختار الملف<input type="file" accept="application/json,.json" style="display:none" id="se-imp-f"></label><p class="small" id="se-imp-s" style="margin:8px 0 0"></p>'+
-      '<h2 style="margin-top:16px">👑 شكون يشوف كلشي</h2><p class="small" style="margin:0 0 6px">زيد الـ Gmail ديال خوك: كيدخل بلا كود وكيشوف كلشي بحالك. اللي دخلو بكود كيكونو «👷 بائعين»: الشرا، السطوك، أثمان الشرا والربح مخبّيين عليهم، والرمز ديالك كيحل كلشي 10 دقايق.</p><div style="display:flex;gap:6px"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><div id="se-st-l" class="small" style="margin-top:6px"></div>'+
-      '<div id="se-own" style="display:none"><h2 style="margin-top:16px">🔑 الكودات</h2><p class="small" style="margin:0 0 6px">كل كود كيخدم مرة وحدة: Gmail واحد وتيليفون واحد. ✕ كيحيّد الشخص (خاصو كود جديد).</p><div id="se-mem" class="small"></div><button type="button" class="btn btn-line full" id="se-newcode" style="margin-top:8px">➕ صاوب كود جديد</button><div id="se-codes" class="small" style="margin-top:6px;line-height:1.9"></div><h2 style="margin-top:16px">🤖 الذكاء الاصطناعي (Claude)</h2><p class="small" style="margin:0 0 6px" id="se-ai-st"></p><div style="display:flex;gap:6px"><input id="se-ai-k" type="password" placeholder="sk-ant-..." autocomplete="off" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-ai-save">💾</button></div><button type="button" class="btn btn-line full" id="se-ai-test" style="margin-top:6px">🧪 جرّب</button></div>'+
-      '<p class="small" style="margin:10px 0 0;opacity:.7" id="se-me"></p><button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
+    var v=document.getElementById('view-backup'); var ex=document.getElementById('exp-card'); if (ex) ex.remove();
+    if (!v || document.getElementById('se-imp') || !(window.SE&&SE.role)) return;
+    var me=auth.currentUser, role=(window.SE&&SE.role)||'';
+    var c=el('<div class="card" id="se-imp"><h2>👤 الحساب</h2><p class="small" style="margin:0">داخل بـ: <b style="direction:ltr;display:inline-block">'+esc2(me&&me.email)+'</b> · '+(role==='owner'?'👑 المول':role==='full'?'👑 كيشوف كلشي':'👷 بائع')+'</p>'+
+      '<button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
     v.appendChild(c);
-    c.querySelector('#se-imp-f').addEventListener('change', function(){ var f=this.files&&this.files[0]; if (!f) return; var s=document.getElementById('se-imp-s');
-      importFile(f, function(m){ s.textContent=m; }).then(function(r){ s.textContent='✅ تزادو '+r.ok+' من '+r.all+(r.bad.length?(' · ⚠️ ما تزادوش: '+r.bad.slice(0,6).join('، ')):'')+'. غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 3000); }).catch(function(e){ s.textContent='⚠️ '+(e.message||e); }); });
     c.querySelector('#se-out').addEventListener('click', function(){ auth.signOut(); });
-    var me=auth.currentUser; c.querySelector('#se-me').textContent=me?('داخل بـ: '+(me.email||'')):'';
-    function drawStaff(){ fs.collection('staff').get().then(function(q){ var l=c.querySelector('#se-st-l'); l.innerHTML=q.docs.length?q.docs.map(function(d){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)"><span style="direction:ltr">'+d.id.replace(/</g,'&lt;')+'</span><button type="button" class="chip" data-sedel="'+d.id.replace(/"/g,'&quot;')+'">✕</button></div>'; }).join(''):'<span style="opacity:.7">غير نتا دابا.</span>'; }).catch(function(){}); }
-    drawStaff();
-    var own=c.querySelector('#se-own');
-    fs.collection('codes').limit(1).get().then(function(){ own.style.display='block'; drawMembers(); }, function(){ own.remove(); });
-    function drawMembers(){
-      Promise.all([fs.collection('members').get(), fs.collection('redeem').get(), fs.collection('codes').get()]).then(function(r){
-        var ms=r[0].docs, used={}; r[1].docs.forEach(function(d){ used[d.id]=d.data(); });
-        c.querySelector('#se-mem').innerHTML=ms.length?ms.map(function(d){ var x=d.data(); return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)"><span><span style="direction:ltr;display:inline-block">'+String(x.email||'').replace(/</g,'&lt;')+'</span> · <code>'+x.code+'</code></span><button type="button" class="chip" data-semem="'+d.id+'">✕</button></div>'; }).join(''):'<span style="opacity:.7">حتى واحد ما دخل بكود دابا.</span>';
-        var mine=r[2].docs.map(function(d){ return d.id; });
-        c.querySelector('#se-codes').innerHTML=mine.length?('<b>كودات جداد:</b> '+mine.map(function(k){ return '<code style="'+(used[k]?'text-decoration:line-through;opacity:.5':'')+'">'+k+'</code>'; }).join(' · ')):'';
-      }).catch(function(){});
+    if (role!=='owner') return;
+    var o=el('<div class="card" id="se-own">'+
+      '<h2>👥 الناس والصلاحيات</h2><p class="small" style="margin:0 0 6px"><b>👑 كلشي</b>: كيشوف ويبدّل كلشي بحالك. <b>👷 بائع</b>: البيع والكريدي والزبناء فقط (الشرا، السطوك، أثمان الشرا والربح مخبّيين).</p>'+
+      '<div id="se-ppl" class="small"></div>'+
+      '<h3 style="margin:14px 0 4px;font-size:15px">➕ زيد Gmail (بلا كود)</h3><div style="display:flex;gap:6px;align-items:center"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr">'+roleSel('full','id="se-st-r"')+'<button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><p class="small" id="se-st-msg" style="margin:4px 0 0"></p>'+
+      '<h3 style="margin:14px 0 4px;font-size:15px">🔑 الكودات</h3><p class="small" style="margin:0 0 6px">للناس اللي ما زدتيش الـ Gmail ديالهم: كل كود مرة وحدة (Gmail واحد + تيليفون واحد). اللي دخل بكود كيكون 👷 بائع حتى تبدّلو.</p><button type="button" class="btn btn-line full" id="se-newcode">➕ صاوب كود جديد</button><div id="se-codes" class="small" style="margin-top:6px;line-height:1.9"></div>'+
+      '<h2 style="margin-top:18px">🤖 الذكاء الاصطناعي (Claude)</h2><p class="small" style="margin:0 0 6px" id="se-ai-st"></p><div style="display:flex;gap:6px"><input id="se-ai-k" type="password" placeholder="sk-ant-..." autocomplete="off" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-ai-save">💾</button></div><button type="button" class="btn btn-line full" id="se-ai-test" style="margin-top:6px">🧪 جرّب</button>'+
+      '<h2 style="margin-top:18px">📥 استيراد البيانات القديمة</h2><p class="small" style="margin:0 0 8px">الملف اللي تصدّر من التطبيق القديم (wash-nchriha-export.json).</p><label class="btn btn-line full" style="text-align:center;cursor:pointer">📂 ختار الملف<input type="file" accept="application/json,.json" style="display:none" id="se-imp-f"></label><p class="small" id="se-imp-s" style="margin:8px 0 0"></p>'+
+      '</div>');
+    v.insertBefore(o, c);
+    function draw(){
+      Promise.all([fs.collection('staff').get(), fs.collection('members').get(), fs.collection('redeem').get(), fs.collection('codes').get()]).then(function(r){
+        var rows=[];
+        r[0].docs.forEach(function(d){ var x=d.data(); rows.push('<div class="li" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1;direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">'+esc2(d.id)+'</span><span class="tag">Gmail</span>'+roleSel(x.role==='seller'?'seller':'full','data-serole="staff/'+esc2(d.id)+'"')+'<button type="button" class="chip" data-sedel="staff/'+esc2(d.id)+'">✕</button></div>'); });
+        r[1].docs.forEach(function(d){ var x=d.data(); rows.push('<div class="li" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1;direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">'+esc2(x.email)+'</span><span class="tag">'+esc2(x.code)+'</span>'+roleSel(x.role==='full'?'full':'seller','data-serole="members/'+esc2(d.id)+'"')+'<button type="button" class="chip" data-sedel="members/'+esc2(d.id)+'">✕</button></div>'); });
+        c0.innerHTML='<div style="padding:6px 0"><b>👑 نتا</b> <span style="direction:ltr;display:inline-block;opacity:.8">'+esc2(me&&me.email)+'</span></div>'+(rows.join('')||'<div style="opacity:.7">حتى واحد آخر دابا.</div>');
+        var used={}; r[2].docs.forEach(function(d){ used[d.id]=1; });
+        var mine=r[3].docs.map(function(d){ return d.id; });
+        o.querySelector('#se-codes').innerHTML=mine.length?('كودات جداد: '+mine.map(function(k){ return '<code style="'+(used[k]?'text-decoration:line-through;opacity:.5':'')+'">'+k+'</code>'; }).join(' · ')):'';
+      }).catch(function(e){ c0.textContent='⚠️ '+(e.code||e); });
     }
-    function aiSt(){ fs.doc('settings/ai').get().then(function(x){ var k=x.exists&&x.data().key; c.querySelector('#se-ai-st').textContent=k?('✅ المفتاح محفوظ ('+k.slice(0,10)+'…'+k.slice(-4)+'). كيخدم فكاع الحوايج ديال AI.'):'❌ ما كاينش مفتاح. AI ما خدامش.'; }).catch(function(){}); }
+    var c0=o.querySelector('#se-ppl'); draw();
+    o.querySelector('#se-st-add').addEventListener('click', function(){ var e=(o.querySelector('#se-st-e').value||'').trim().toLowerCase(), r=o.querySelector('#se-st-r').value, m=o.querySelector('#se-st-msg');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ m.textContent='⚠️ إيميل ماشي صحيح'; return; }
+      fs.doc('staff/'+e).set({role:r, at:Date.now(), by:(me&&me.email)||''}).then(function(){ o.querySelector('#se-st-e').value=''; m.textContent='✅ تزاد. يقدر يدخل بـ «دخول بـ Gmail» بلا كود.'; draw(); }, function(er){ m.textContent='⚠️ '+(er.code||er); }); });
+    o.addEventListener('change', function(ev){ var t=ev.target; if (!t.dataset || !t.dataset.serole) return; fs.doc(t.dataset.serole).set({role:t.value},{merge:true}).then(function(){ t.style.outline='2px solid #1F8A4C'; setTimeout(function(){ t.style.outline=''; },900); }); });
+    o.addEventListener('click', function(ev){ var t=ev.target.closest&&ev.target.closest('[data-sedel]'); if (!t) return; if (t.dataset.ok!=='1'){ t.dataset.ok='1'; t.textContent='متأكد؟'; return; } fs.doc(t.dataset.sedel).delete().then(draw); });
+    o.querySelector('#se-newcode').addEventListener('click', function(){ var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a=new Uint8Array(8); crypto.getRandomValues(a); var k='SE-'; for (var i=0;i<8;i++){ if (i===4) k+='-'; k+=A[a[i]%A.length]; }
+      fs.doc('codes/'+k).set({at:Date.now()}).then(function(){ draw(); try{ navigator.clipboard.writeText(k); }catch(e){} setTimeout(function(){ o.querySelector('#se-codes').insertAdjacentHTML('afterbegin','<div>✅ كود جديد: <b style="direction:ltr">'+k+'</b> (تنسخ)</div>'); },400); }); });
+    function aiSt(){ fs.doc('settings/ai').get().then(function(x){ var k=x.exists&&x.data().key; o.querySelector('#se-ai-st').textContent=k?('✅ المفتاح محفوظ ('+k.slice(0,10)+'…'+k.slice(-4)+').'):'❌ ما كاينش مفتاح. AI ما خدامش.'; }).catch(function(){}); }
     aiSt();
-    c.querySelector('#se-ai-save').addEventListener('click', function(){ var k=(c.querySelector('#se-ai-k').value||'').trim(); if (!/^sk-ant-/.test(k)){ c.querySelector('#se-ai-st').textContent='⚠️ المفتاح خاصو يبدا بـ sk-ant-'; return; } fs.doc('settings/ai').set({key:k, at:Date.now()}).then(function(){ c.querySelector('#se-ai-k').value=''; aiSt(); c.querySelector('#se-ai-st').textContent+=' غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 1500); }); });
-    c.querySelector('#se-ai-test').addEventListener('click', function(){ var st=c.querySelector('#se-ai-st'); st.textContent='⏳'; caps.sample().then(function(f){ if (!f){ st.textContent='❌ ما كاينش مفتاح'; return; } return f('قول غير: مرحبا بيك فـ Shema Electro',{modelTier:'quick'}).then(function(r){ st.textContent='✅ '+r.text; }); }).catch(function(e){ st.textContent='⚠️ '+(e.message||e); }); });
-    c.querySelector('#se-newcode').addEventListener('click', function(){ var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a=new Uint8Array(8); crypto.getRandomValues(a); var k='SE-'; for (var i=0;i<8;i++){ if (i===4) k+='-'; k+=A[a[i]%A.length]; }
-      fs.doc('codes/'+k).set({at:Date.now()}).then(function(){ drawMembers(); try{ navigator.clipboard.writeText(k); }catch(e){} c.querySelector('#se-codes').insertAdjacentHTML('afterbegin','<div>✅ كود جديد: <b style="direction:ltr">'+k+'</b> (تنسخ)</div>'); }); });
-    c.addEventListener('click', function(ev){ var t=ev.target.closest&&ev.target.closest('[data-semem]'); if (!t) return; if (t.dataset.ok!=='1'){ t.dataset.ok='1'; t.textContent='متأكد؟'; return; } fs.doc('members/'+t.dataset.semem).delete().then(drawMembers); });
-    c.querySelector('#se-st-add').addEventListener('click', function(){ var e=(c.querySelector('#se-st-e').value||'').trim().toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ alertish('إيميل ماشي صحيح'); return; } fs.collection('staff').doc(e).set({at:Date.now(), by:(me&&me.email)||''}).then(function(){ c.querySelector('#se-st-e').value=''; drawStaff(); }); });
-    c.addEventListener('click', function(ev){ var t=ev.target.closest&&ev.target.closest('[data-sedel]'); if (!t) return; if (t.dataset.ok!=='1'){ t.dataset.ok='1'; t.textContent='متأكد؟'; return; } fs.collection('staff').doc(t.dataset.sedel).delete().then(drawStaff); });
-    function alertish(m){ c.querySelector('#se-st-l').textContent=m; }
+    o.querySelector('#se-ai-save').addEventListener('click', function(){ var k=(o.querySelector('#se-ai-k').value||'').trim(), st=o.querySelector('#se-ai-st'); if (!/^sk-ant-/.test(k)){ st.textContent='⚠️ المفتاح خاصو يبدا بـ sk-ant-'; return; } fs.doc('settings/ai').set({key:k, at:Date.now()}).then(function(){ o.querySelector('#se-ai-k').value=''; st.textContent='✅ تحفظ. غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 1500); }); });
+    o.querySelector('#se-ai-test').addEventListener('click', function(){ var st=o.querySelector('#se-ai-st'); st.textContent='⏳'; caps.sample().then(function(f){ if (!f){ st.textContent='❌ ما كاينش مفتاح'; return; } return f('قول غير: مرحبا بيك فـ Shema Electro',{modelTier:'quick'}).then(function(r){ st.textContent='✅ '+r.text; }); }).catch(function(e){ st.textContent='⚠️ '+(e.message||e); }); });
+    o.querySelector('#se-imp-f').addEventListener('change', function(){ var f=this.files&&this.files[0]; if (!f) return; var s=o.querySelector('#se-imp-s');
+      importFile(f, function(m){ s.textContent=m; }).then(function(r){ s.textContent='✅ تزادو '+r.ok+' من '+r.all+(r.bad.length?(' · ⚠️ ما تزادوش: '+r.bad.slice(0,6).join('، ')):'')+'. غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 3000); }).catch(function(e){ s.textContent='⚠️ '+(e.message||e); }); });
   }
   var mo=new MutationObserver(function(){ addCard(); });
   document.addEventListener('DOMContentLoaded', function(){ addCard(); mo.observe(document.body,{childList:true,subtree:false}); });
