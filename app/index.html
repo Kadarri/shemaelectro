@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="shim.js?v=8"></script>
+<script src="shim.js?v=9"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#141413">
@@ -4173,7 +4173,7 @@ textarea{min-height:70px;resize:vertical}
   var extra={rate:10.8, bro:50, reinv:30, autoDisc:0, shop:'محل الأواني · ويسلان، مكناس'};
   function X(k,d){ var v=extra[k]; return (v!==undefined && v!==null && v!=='' && isFinite(v)) ? +v : d; }
   function saveExtra(patch){ Object.assign(extra,patch); if(db) db.doc('settings/extra').set(extra).catch(function(){toast('لم يتم الحفظ');}); }
-  function applyExtra(s){ try { if (s && s.exists){ var v=s.data()||{}; Object.assign(extra, v); } } catch(e){} rerender5(); }
+  function applyExtra(s){ try { if (s && s.exists){ var v=s.data()||{}; Object.assign(extra, v); } } catch(e){} rerender5(); try{ applyWorker(); }catch(e){} }
   function isOn(id){ var el=$('view-'+id); return el && !el.classList.contains('hidden'); }
   function rerender5(){
     renderTaskBar();
@@ -6069,7 +6069,7 @@ textarea{min-height:70px;resize:vertical}
     var el=$('diag'); if(!el) return;
     var bf=(typeof badFeeds==='function')?badFeeds():[];
     if (bf.length && !diag.err) diag.err=bf.map(function(f){return f.name;}).slice(0,4).join('، ')+' ('+bf[0].err+')';
-    var vtag=' · v72'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
+    var vtag=' · v73'+((typeof isWorker==='function'&&isWorker())?' · 👷':'');
     var t = diag.err ? '⚠️ مشكلة في قراءة البيانات: '+diag.err : (diag.at ? '🔄 '+records.length+' ثمن · '+sales.length+' بيع · '+((typeof clients!=='undefined'&&clients)?clients.length:0)+' زبون · آخر تحديث '+new Date(diag.at).toLocaleTimeString('ar-MA',{hour:'2-digit',minute:'2-digit'}) : '⏳ جاري تحميل البيانات...');
     el.querySelector('span').textContent=t+vtag; el.classList.toggle('err', !!diag.err);
   }
