@@ -124,11 +124,29 @@
   /* ---------- downloads ---------- */
   var downloadsApi={ save:function(o){ return new Promise(function(res){ var b=o.data instanceof Blob?o.data:new Blob([o.data]); var u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=o.filename||'file'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); res(); }, 1500); }); } };
 
+
+  /* ---------- AI: Claude API (key saved in settings/ai, readable only by members) ---------- */
+  var AI_MODELS={quick:'claude-haiku-5-5', default:'claude-sonnet-5-5'};
+  function makeSample(key){
+    function toB64(b){ return shrink(b,1400,0.82).then(function(d){ var m=/^data:([^;]+);base64,(.*)$/.exec(d||''); return m?{type:'image',source:{type:'base64',media_type:m[1]==='image/png'?'image/png':'image/jpeg',data:m[2]}}:null; }); }
+    function call(prompt, opts, jsonMode){
+      opts=opts||{}; var imgs=(opts.images||[]).filter(Boolean);
+      return Promise.all(imgs.map(toB64)).then(function(parts){
+        var content=parts.filter(Boolean).concat([{type:'text', text:prompt+(jsonMode?'\n\nAnswer with valid JSON only, no text before or after.':'')}]);
+        return fetch('https://api.anthropic.com/v1/messages', {method:'POST', headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body:JSON.stringify({model:AI_MODELS[opts.modelTier==='quick'?'quick':'default'], max_tokens:4096, messages:[{role:'user', content:content}]})});
+      }).then(function(r){ return r.json().then(function(j){ if (!r.ok) throw new Error((j&&j.error&&j.error.message)||('AI '+r.status)); return (j.content||[]).filter(function(c){return c.type==='text';}).map(function(c){return c.text;}).join(''); }); });
+    }
+    var f=function(prompt, opts){ return call(prompt, opts, false).then(function(t){ return {text:t}; }); };
+    f.json=function(prompt, opts){ return call(prompt, opts, true).then(function(t){ var s=String(t||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,''); try{ return JSON.parse(s); }catch(e){ var m=s.match(/[\[{][\s\S]*[\]}]/); if (m) return JSON.parse(m[0]); throw e; } }); };
+    return f;
+  }
   /* ---------- the platform object the app expects ---------- */
   var caps={
     db: function(){ return ready.then(function(){ return fs; }); },
     assets: function(){ return ready.then(function(){ return assetsApi; }); },
-    downloads: function(){ return Promise.resolve(downloadsApi); }
+    downloads: function(){ return Promise.resolve(downloadsApi); },
+    sample: function(){ return ready.then(function(){ return fs.doc('settings/ai').get(); }).then(function(d){ var k=d.exists&&d.data().key; return k?makeSample(k):null; }).catch(function(){ return null; }); }
   };
   window.claude={ use:function(name){ return caps[name]?caps[name]():Promise.resolve(null); } };
 
@@ -158,7 +176,7 @@
     var c=el('<div class="card" id="se-imp"><h2>📥 استيراد البيانات القديمة</h2><p class="small" style="margin:0 0 8px">ختار الملف اللي تصدّر من التطبيق القديم (wash-nchriha-export.json). كيتزادو البيانات والفوطوات.</p>'+
       '<label class="btn btn-gold full" style="text-align:center;cursor:pointer">📂 ختار الملف<input type="file" accept="application/json,.json" style="display:none" id="se-imp-f"></label><p class="small" id="se-imp-s" style="margin:8px 0 0"></p>'+
       '<h2 style="margin-top:16px">👥 شكون يقدر يدخل</h2><p class="small" style="margin:0 0 6px">زيد الإيميل (Gmail) ديال خوك ولا الخدام. كيدخل بـ «دخول بـ Gmail».</p><div style="display:flex;gap:6px"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><div id="se-st-l" class="small" style="margin-top:6px"></div>'+
-      '<div id="se-own" style="display:none"><h2 style="margin-top:16px">🔑 الكودات</h2><p class="small" style="margin:0 0 6px">كل كود كيخدم مرة وحدة: Gmail واحد وتيليفون واحد. ✕ كيحيّد الشخص (خاصو كود جديد).</p><div id="se-mem" class="small"></div><button type="button" class="btn btn-line full" id="se-newcode" style="margin-top:8px">➕ صاوب كود جديد</button><div id="se-codes" class="small" style="margin-top:6px;line-height:1.9"></div></div>'+
+      '<div id="se-own" style="display:none"><h2 style="margin-top:16px">🔑 الكودات</h2><p class="small" style="margin:0 0 6px">كل كود كيخدم مرة وحدة: Gmail واحد وتيليفون واحد. ✕ كيحيّد الشخص (خاصو كود جديد).</p><div id="se-mem" class="small"></div><button type="button" class="btn btn-line full" id="se-newcode" style="margin-top:8px">➕ صاوب كود جديد</button><div id="se-codes" class="small" style="margin-top:6px;line-height:1.9"></div><h2 style="margin-top:16px">🤖 الذكاء الاصطناعي (Claude)</h2><p class="small" style="margin:0 0 6px" id="se-ai-st"></p><div style="display:flex;gap:6px"><input id="se-ai-k" type="password" placeholder="sk-ant-..." autocomplete="off" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-ai-save">💾</button></div><button type="button" class="btn btn-line full" id="se-ai-test" style="margin-top:6px">🧪 جرّب</button></div>'+
       '<p class="small" style="margin:10px 0 0;opacity:.7" id="se-me"></p><button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
     v.appendChild(c);
     c.querySelector('#se-imp-f').addEventListener('change', function(){ var f=this.files&&this.files[0]; if (!f) return; var s=document.getElementById('se-imp-s');
@@ -177,6 +195,10 @@
         c.querySelector('#se-codes').innerHTML=mine.length?('<b>كودات جداد:</b> '+mine.map(function(k){ return '<code style="'+(used[k]?'text-decoration:line-through;opacity:.5':'')+'">'+k+'</code>'; }).join(' · ')):'';
       }).catch(function(){});
     }
+    function aiSt(){ fs.doc('settings/ai').get().then(function(x){ var k=x.exists&&x.data().key; c.querySelector('#se-ai-st').textContent=k?('✅ المفتاح محفوظ ('+k.slice(0,10)+'…'+k.slice(-4)+'). كيخدم فكاع الحوايج ديال AI.'):'❌ ما كاينش مفتاح. AI ما خدامش.'; }).catch(function(){}); }
+    aiSt();
+    c.querySelector('#se-ai-save').addEventListener('click', function(){ var k=(c.querySelector('#se-ai-k').value||'').trim(); if (!/^sk-ant-/.test(k)){ c.querySelector('#se-ai-st').textContent='⚠️ المفتاح خاصو يبدا بـ sk-ant-'; return; } fs.doc('settings/ai').set({key:k, at:Date.now()}).then(function(){ c.querySelector('#se-ai-k').value=''; aiSt(); c.querySelector('#se-ai-st').textContent+=' غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 1500); }); });
+    c.querySelector('#se-ai-test').addEventListener('click', function(){ var st=c.querySelector('#se-ai-st'); st.textContent='⏳'; caps.sample().then(function(f){ if (!f){ st.textContent='❌ ما كاينش مفتاح'; return; } return f('قول غير: مرحبا بيك فـ Shema Electro',{modelTier:'quick'}).then(function(r){ st.textContent='✅ '+r.text; }); }).catch(function(e){ st.textContent='⚠️ '+(e.message||e); }); });
     c.querySelector('#se-newcode').addEventListener('click', function(){ var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a=new Uint8Array(8); crypto.getRandomValues(a); var k='SE-'; for (var i=0;i<8;i++){ if (i===4) k+='-'; k+=A[a[i]%A.length]; }
       fs.doc('codes/'+k).set({at:Date.now()}).then(function(){ drawMembers(); try{ navigator.clipboard.writeText(k); }catch(e){} c.querySelector('#se-codes').insertAdjacentHTML('afterbegin','<div>✅ كود جديد: <b style="direction:ltr">'+k+'</b> (تنسخ)</div>'); }); });
     c.addEventListener('click', function(ev){ var t=ev.target.closest&&ev.target.closest('[data-semem]'); if (!t) return; if (t.dataset.ok!=='1'){ t.dataset.ok='1'; t.textContent='متأكد؟'; return; } fs.doc('members/'+t.dataset.semem).delete().then(drawMembers); });
