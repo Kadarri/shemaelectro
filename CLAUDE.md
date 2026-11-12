@@ -11,3 +11,7 @@
 - Updates must NEVER sign anyone out (forced logout on update caused repeated logouts and was removed on purpose). The only
   sign-outs are the manual buttons; each one records its reason in localStorage `se-why`, shown on the login screen.
 - Build the app with `python3 build_app.py <N>` (copies the Claude artifact app and injects shim.js); bump N on every release.
+
+## Status (12 Nov 2026)
+- The owner asked to stop the GitHub website and the standalone Firebase app. Both pages now only say the site is stopped
+  (old code is still in git history). Work continues only on the Claude artifact app.
