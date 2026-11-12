@@ -32,19 +32,26 @@
     var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
     var box=el('<div id="se-login"><div class="bx"><div class="lg">SE</div><h1>Shema Electro</h1><p>دخل بالحساب ديالك</p>'+
       '<input id="se-em" type="email" autocomplete="username" placeholder="Email"><input id="se-pw" type="password" autocomplete="current-password" placeholder="Mot de passe">'+
-      '<button type="button" id="se-go">دخول</button><div class="er" id="se-er"></div></div></div>');
+      '<button type="button" id="se-go">دخول</button><div style="margin:14px 0 4px;color:#7d776a;font-size:13px">ولا</div><button type="button" id="se-g" style="background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>دخول بـ Gmail</button><div class="er" id="se-er"></div></div></div>');
+    if (window.__seDenied){ setTimeout(function(){ var e=document.getElementById('se-er'); if (e) e.textContent=window.__seDenied; },0); }
     (document.body||document.documentElement).appendChild(box);
     function go(){ var em=document.getElementById('se-em').value.trim(), pw=document.getElementById('se-pw').value; var er=document.getElementById('se-er'); er.textContent='⏳';
       auth.signInWithEmailAndPassword(em,pw).catch(function(e){ var c=(e&&e.code)||''; er.textContent=/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c)?'الإيميل ولا كلمة السر غالطين':(/too-many/.test(c)?'بزاف ديال المحاولات، تسنى شوية':(/network/.test(c)?'ما كاينش الأنترنيت':'ما دخلش: '+c)); }); }
     box.querySelector('#se-go').addEventListener('click', go);
+    box.querySelector('#se-g').addEventListener('click', function(){ var er=document.getElementById('se-er'); er.textContent='⏳'; var pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'}); auth.signInWithPopup(pr).catch(function(e){ var c=(e&&e.code)||''; if (/popup-blocked|operation-not-supported|web-storage/.test(c)) return auth.signInWithRedirect(pr); er.textContent=/popup-closed|cancelled/.test(c)?'':'ما دخلش: '+c; }); });
     box.querySelector('#se-pw').addEventListener('keydown', function(e){ if (e.key==='Enter') go(); });
   }
   function hideLogin(){ var b=document.getElementById('se-login'); if (b) b.remove(); }
   var readyRes; var ready=new Promise(function(r){ readyRes=r; });
   var wasIn=null;
   auth.onAuthStateChanged(function(u){
-    if (u){ hideLogin(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs(); }
-    else { if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
+    if (u){
+      fs.doc('settings/main').get({source:'server'}).catch(function(e){ return e; }).then(function(r){
+        if (r && r.code==='permission-denied'){ try{ sessionStorage.setItem('se-denied','⛔ هاد الحساب ('+(u.email||'')+') ما عندوش الإذن. طلب من مول المحل يزيدو.'); }catch(x){} auth.signOut(); return; }
+        hideLogin(); postToken(); if (wasIn===false){ location.reload(); return; } wasIn=true; readyRes(u); syncWebImgs();
+      });
+    }
+    else { try{ window.__seDenied=sessionStorage.getItem('se-denied'); sessionStorage.removeItem('se-denied'); }catch(x){} if (wasIn===true){ location.reload(); return; } wasIn=false; if (document.body) showLogin(); else document.addEventListener('DOMContentLoaded', showLogin); }
   });
   auth.onIdTokenChanged(function(){ postToken(); });
   window.seLogout=function(){ auth.signOut(); };
@@ -122,11 +129,18 @@
     var v=document.getElementById('view-backup'); if (!v || document.getElementById('se-imp')) return;
     var c=el('<div class="card" id="se-imp"><h2>📥 استيراد البيانات القديمة</h2><p class="small" style="margin:0 0 8px">ختار الملف اللي تصدّر من التطبيق القديم (wash-nchriha-export.json). كيتزادو البيانات والفوطوات.</p>'+
       '<label class="btn btn-gold full" style="text-align:center;cursor:pointer">📂 ختار الملف<input type="file" accept="application/json,.json" style="display:none" id="se-imp-f"></label><p class="small" id="se-imp-s" style="margin:8px 0 0"></p>'+
-      '<button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
+      '<h2 style="margin-top:16px">👥 شكون يقدر يدخل</h2><p class="small" style="margin:0 0 6px">زيد الإيميل (Gmail) ديال خوك ولا الخدام. كيدخل بـ «دخول بـ Gmail».</p><div style="display:flex;gap:6px"><input id="se-st-e" type="email" placeholder="exemple@gmail.com" style="flex:1;direction:ltr"><button type="button" class="btn btn-gold" id="se-st-add">➕</button></div><div id="se-st-l" class="small" style="margin-top:6px"></div>'+
+      '<p class="small" style="margin:10px 0 0;opacity:.7" id="se-me"></p><button type="button" class="btn btn-line full" id="se-out" style="margin-top:10px">🚪 خروج من الحساب</button></div>');
     v.appendChild(c);
     c.querySelector('#se-imp-f').addEventListener('change', function(){ var f=this.files&&this.files[0]; if (!f) return; var s=document.getElementById('se-imp-s');
       importFile(f, function(m){ s.textContent=m; }).then(function(r){ s.textContent='✅ تزادو '+r.ok+' من '+r.all+(r.bad.length?(' · ⚠️ ما تزادوش: '+r.bad.slice(0,6).join('، ')):'')+'. غادي نعاودو نحلّو التطبيق…'; setTimeout(function(){ location.reload(); }, 3000); }).catch(function(e){ s.textContent='⚠️ '+(e.message||e); }); });
     c.querySelector('#se-out').addEventListener('click', function(){ auth.signOut(); });
+    var me=auth.currentUser; c.querySelector('#se-me').textContent=me?('داخل بـ: '+(me.email||'')):'';
+    function drawStaff(){ fs.collection('staff').get().then(function(q){ var l=c.querySelector('#se-st-l'); l.innerHTML=q.docs.length?q.docs.map(function(d){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)"><span style="direction:ltr">'+d.id.replace(/</g,'&lt;')+'</span><button type="button" class="chip" data-sedel="'+d.id.replace(/"/g,'&quot;')+'">✕</button></div>'; }).join(''):'<span style="opacity:.7">غير نتا دابا.</span>'; }).catch(function(){}); }
+    drawStaff();
+    c.querySelector('#se-st-add').addEventListener('click', function(){ var e=(c.querySelector('#se-st-e').value||'').trim().toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ alertish('إيميل ماشي صحيح'); return; } fs.collection('staff').doc(e).set({at:Date.now(), by:(me&&me.email)||''}).then(function(){ c.querySelector('#se-st-e').value=''; drawStaff(); }); });
+    c.addEventListener('click', function(ev){ var t=ev.target.closest&&ev.target.closest('[data-sedel]'); if (!t) return; if (t.dataset.ok!=='1'){ t.dataset.ok='1'; t.textContent='متأكد؟'; return; } fs.collection('staff').doc(t.dataset.sedel).delete().then(drawStaff); });
+    function alertish(m){ c.querySelector('#se-st-l').textContent=m; }
   }
   var mo=new MutationObserver(function(){ addCard(); });
   document.addEventListener('DOMContentLoaded', function(){ addCard(); mo.observe(document.body,{childList:true,subtree:false}); });
