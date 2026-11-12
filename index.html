@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shema Electro · ويسلان، مكناس</title>
+<meta name="description" content="Shema Electro – أواني المطبخ والأدوات المنزلية فويسلان، مكناس. شوف السلعة والأثمنة وطلب فالواتساب.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫖</text></svg>">
+<script src="data.js?v=0"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A227;--gold2:#E8B04A;--ink:#141413;--bg:#FAF7F0;--card:#fff;--line:#ECE6D8;--mut:#6B675E;--ok:#1F8A4C;--warn:#C26A00;--bad:#B3261E;--wa:#25D366}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,sans-serif}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+.hero{background:#1E1E1E;color:#fff;padding:22px 16px 18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 85% -10%,rgba(232,176,74,.35),transparent 55%),
+ repeating-linear-gradient(45deg,rgba(201,162,39,.07) 0 2px,transparent 2px 22px),
+ repeating-linear-gradient(-45deg,rgba(201,162,39,.07) 0 2px,transparent 2px 22px)}
+.hero>*{position:relative}
+.wrap{max-width:980px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:52px;height:52px;border-radius:16px;background:var(--gold);display:grid;place-items:center;font-size:28px;flex:0 0 52px}
+h1{margin:0;font-size:24px;font-weight:800;line-height:1.2}
+.sub{color:#d9d3c4;font-size:14px;margin-top:2px}
+.hero-btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.hb{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-weight:700;font-size:14px;border:0}
+.hb.wa{background:var(--wa);color:#06331a}
+.hb.ln{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.stats{display:flex;gap:14px;margin-top:12px;font-size:13px;color:#d9d3c4}
+.stats b{color:var(--gold2)}
+.bar{position:sticky;top:0;z-index:5;background:rgba(250,247,240,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 16px}
+.search{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:11px 14px;font:inherit;font-size:16px;outline:none}
+.search:focus{border-color:var(--gold)}
+.cats{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{white-space:nowrap;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:14px;font-weight:600}
+.cat.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tgl{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);margin-top:8px}
+.tgl input{width:18px;height:18px;accent-color:var(--gold)}
+main{padding:14px 12px 90px}
+.sec{font-weight:800;font-size:17px;margin:14px 4px 8px;display:flex;align-items:center;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
+.p{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.ph{aspect-ratio:1/1;background:#F2EEE4;position:relative;display:grid;place-items:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph .ic{font-size:44px;opacity:.55}
+.bdg{position:absolute;top:8px;right:8px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
+.b-in{background:#E3F4EA;color:var(--ok)}
+.b-low{background:#FFF0DB;color:var(--warn)}
+.b-out{background:#FBE4E2;color:var(--bad)}
+.b-new{position:absolute;top:8px;left:8px;background:var(--gold);color:var(--ink);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800}
+.p.out .ph img,.p.out .ph .ic{filter:grayscale(1);opacity:.45}
+.pb{padding:9px 10px 11px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pn{font-weight:700;font-size:15px;line-height:1.35;min-height:2.7em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pp{font-weight:800;font-size:18px;color:var(--gold-d,#8A6D12)}
+.pp small{font-size:12px;font-weight:600;color:var(--mut)}
+.pp.ask{font-size:14px;color:var(--mut);font-weight:700}
+.ob{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:9px 8px;font-weight:800;font-size:14px;background:var(--wa);color:#06331a}
+.ob.alt{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.loading{text-align:center;color:var(--mut);padding:50px 10px}
+.foot{text-align:center;color:var(--mut);font-size:13px;padding:10px 16px 30px}
+.fab{position:fixed;bottom:16px;left:16px;z-index:6;width:58px;height:58px;border-radius:50%;background:var(--wa);display:grid;place-items:center;font-size:28px;box-shadow:0 6px 18px rgba(0,0,0,.25);border:0}
+.upd{font-size:12px;color:#bfb8a8;margin-top:6px}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="brand"><div class="logo">🫖</div><div><h1 id="s-name">Shema Electro</h1><div class="sub" id="s-addr">📍 ويسلان، مكناس</div></div></div>
+  <div class="hero-btns" id="s-btns"></div>
+  <div class="stats" id="s-stats"></div>
+  <div class="upd" id="s-upd"></div>
+</div></header>
+<div class="bar"><div class="wrap">
+  <input class="search" id="q" type="search" placeholder="🔍 قلّب على شي حاجة… (براد، طاجين، كيسان…)">
+  <div class="cats" id="cats"></div>
+  <label class="tgl"><input type="checkbox" id="only"> غير اللي كاين دابا</label>
+</div></div>
+<main><div class="wrap" id="list"><div class="loading">⏳ كنجيب السلعة…</div></div></main>
+<div class="foot" id="foot"></div>
+<a class="fab" id="fab" style="display:none" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+<script>
+(function(){
+  var CATS={all:'الكل',tea:'🫖 أواني الشاي',pots:'🍲 طناجر ومقالي',glass:'🥛 زجاج وكيسان',plates:'🍽️ صحون',plastic:'🧺 بلاستيك',tools:'🔧 أدوات',other:'📦 أخرى'};
+  var ICON={tea:'🫖',pots:'🍲',glass:'🥛',plates:'🍽️',plastic:'🧺',tools:'🔧',other:'📦'};
+  var data=null, cat='all', q='', only=false;
+  function $(i){ return document.getElementById(i); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function norm(s){ return String(s||'').toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ً-ْ]/g,''); }
+  function wa(text){ var p=(data&&data.shop&&data.shop.phone)||''; return 'https://wa.me/'+p+'?text='+encodeURIComponent(text); }
+  function imgSrc(it){ if (it.ph) return (window.SHOP_IMG?window.SHOP_IMG(it.ph):'img/'+encodeURIComponent(it.ph)+'.jpg'); return it.w||''; }
+  function ago(t){ if (!t) return ''; var m=Math.round((Date.now()-t)/60000); if (m<2) return 'دابا'; if (m<60) return 'هادي '+m+' دقيقة'; var h=Math.round(m/60); if (h<24) return 'هادي '+h+' ساعة'; return 'هادي '+Math.round(h/24)+' يوم'; }
+  function card(it){
+    var st=it.s, src=imgSrc(it), name=data.shop.name||'المحل';
+    var badge=st==='out'?'<span class="bdg b-out">⛔ تقضّات</span>':(st==='low'?'<span class="bdg b-low">⚡ باقي غير شوية</span>':'<span class="bdg b-in">✅ متوفر</span>');
+    var price=it.p?'<div class="pp">'+it.p+' <small>درهم</small></div>':'<div class="pp ask">💬 سوّل على الثمن</div>';
+    var hasWa=!!(data.shop&&data.shop.phone);
+    var btn=!hasWa?'':(st==='out'
+      ?'<a class="ob alt" target="_blank" rel="noopener" href="'+esc(wa('السلام، واش غادي ترجع عندكم «'+it.n+'»؟ عافاك خبّرني ملي توصل 🙏'))+'">🔔 خبّرني ملي ترجع</a>'
+      :'<a class="ob" target="_blank" rel="noopener" href="'+esc(wa('السلام، بغيت «'+it.n+'»'+(it.p?' ب '+it.p+' درهم':'')+'. واش باقية؟'))+'">💬 طلب فالواتساب</a>');
+    return '<div class="p'+(st==='out'?' out':'')+'"><div class="ph">'+(src?'<img loading="lazy" alt="'+esc(it.n)+'" src="'+esc(src)+'" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'ic\',textContent:\''+(ICON[it.c]||'📦')+'\'}))">':'<span class="ic">'+(ICON[it.c]||'📦')+'</span>')+badge+(it.nw&&st!=='out'?'<span class="b-new">🆕 جديد</span>':'')+'</div>'+
+      '<div class="pb"><div class="pn">'+esc(it.n)+'</div>'+price+btn+'</div></div>';
+  }
+  function render(){
+    if (!data){ return; }
+    var s=data.shop||{}, items=data.items||[];
+    $('s-name').textContent=s.name||'Shema Electro'; $('s-addr').textContent='📍 '+(s.addr||'ويسلان، مكناس'); document.title=(s.name||'Shema Electro')+' · '+(s.addr||'');
+    var b='';
+    if (s.phone) b+='<a class="hb wa" target="_blank" rel="noopener" href="'+esc(wa('السلام، عندي سؤال على شي سلعة 🙂'))+'">💬 واتساب</a><a class="hb ln" href="tel:+'+esc(s.phone)+'">📞 عيّط</a>';
+    if (s.map) b+='<a class="hb ln" target="_blank" rel="noopener" href="'+esc(s.map)+'">🗺️ فين كاينين</a>';
+    $('s-btns').innerHTML=b;
+    var fab=$('fab'); if (s.phone){ fab.style.display='grid'; fab.href=wa('السلام 👋'); } else fab.style.display='none';
+    var inN=items.filter(function(x){return x.s!=='out';}).length, nwN=items.filter(function(x){return x.nw&&x.s!=='out';}).length;
+    $('s-stats').innerHTML='<span><b>'+inN+'</b> سلعة متوفرة</span>'+(nwN?'<span><b>'+nwN+'</b> جديدة 🆕</span>':'');
+    $('s-upd').textContent=data.at?'🔄 تحدّثات '+ago(data.at):'';
+    var present={}; items.forEach(function(x){ present[x.c||'other']=1; });
+    $('cats').innerHTML=Object.keys(CATS).filter(function(k){ return k==='all'||present[k]; }).map(function(k){ return '<button type="button" class="cat'+(cat===k?' on':'')+'" data-c="'+k+'">'+CATS[k]+'</button>'; }).join('');
+    var nq=norm(q).trim();
+    var list=items.filter(function(x){ return (cat==='all'||(x.c||'other')===cat) && (!only||x.s!=='out') && (!nq||norm(x.n).indexOf(nq)>=0); });
+    var h='';
+    if (!items.length) h='<div class="empty">🛍️ السلعة غادي تبان هنا قريب.</div>';
+    else if (!list.length) h='<div class="empty">ما لقينا والو 🤷‍♂️'+(s.phone?'<br><br><a class="ob" style="display:inline-flex;padding:10px 18px" target="_blank" rel="noopener" href="'+esc(wa('السلام، واش عندكم «'+q+'»؟'))+'">💬 سوّلنا عليها فالواتساب</a>':'')+'</div>';
+    else {
+      var av=list.filter(function(x){return x.s!=='out';}), out=list.filter(function(x){return x.s==='out';});
+      if (av.length) h+='<div class="grid">'+av.map(card).join('')+'</div>';
+      if (out.length) h+='<div class="sec">⛔ تقضّات (كترجع قريب)</div><div class="grid">'+out.map(card).join('')+'</div>';
+    }
+    $('list').innerHTML=h;
+    $('foot').innerHTML=esc(s.name||'')+' · '+esc(s.addr||'')+'<br>الأثمنة والسلعة كيتحدّثو أوتوماتيكياً من المحل.';
+  }
+  document.addEventListener('click', function(e){ var c=e.target.closest&&e.target.closest('[data-c]'); if (c){ cat=c.dataset.c; render(); } });
+  $('q').addEventListener('input', function(){ q=this.value; render(); });
+  $('only').addEventListener('change', function(){ only=this.checked; render(); });
+  function setData(d){ if (!d) return; data=d; data.shop=data.shop||{}; data.items=data.items||[]; render(); }
+  if (window.SHOP_DATA){ setData(window.SHOP_DATA); return; }
+  setData({shop:{name:'Shema Electro',addr:'ويسلان، مكناس'},items:[]});
+})();
+</script>
+</body>
+</html>
