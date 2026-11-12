@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="shim.js?v=18"></script>
+<script src="shim.js?v=19"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#141413">
@@ -7394,7 +7394,7 @@ textarea{min-height:70px;resize:vertical}
       $('sb-prod').addEventListener('click', function(){ try{ applySaMode('price'); }catch(e){} $('pc-photo').click(); setTimeout(function(){ var c=$('pc-name').closest('.card'); if (c) c.scrollIntoView({block:'start'}); },300); });
     }
     function apply(){ var on=true; try{ on=localStorage.getItem('wns-simple')!=='0'; }catch(e){} document.body.classList.toggle('simple', on); var b=$('simple-more'); if (b) b.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; var t=$('simple-tg'); if (t) t.checked=on; }
-    $('simple-more').addEventListener('click', function(){ document.body.classList.toggle('simple-open'); apply(); if (document.body.classList.contains('simple-open')) window.scrollTo({top:0,behavior:'smooth'}); });
+    $('simple-more').addEventListener('click', function(){ document.body.classList.toggle('simple-open'); apply(); });
     /* switch in settings */
     var s=$('view-set'); if (s){ var c=document.createElement('div'); c.className='card'; c.innerHTML='<h2>🧹 شاشة بسيطة</h2><label style="display:flex;gap:10px;align-items:center;font-weight:700"><input type="checkbox" id="simple-tg" style="width:22px;height:22px"> بيّن غير المهم (البيع والسلة)</label><p class="small" style="margin:6px 0 0">الباقي (الحالة، المهام، الطلبات، الاختيار المتعدد…) كيتخبّا ورا «⋯ أدوات أخرى». مزيان ملي الزبون كيشوف الشاشة.</p>'; s.insertBefore(c, s.firstChild);
       $('simple-tg').addEventListener('change', function(){ try{ localStorage.setItem('wns-simple', this.checked?'1':'0'); }catch(e){} document.body.classList.remove('simple-open'); apply(); }); }
@@ -7415,12 +7415,12 @@ textarea{min-height:70px;resize:vertical}
       Object.keys(KEEP).forEach(function(v){ var sec=$('view-'+v); if (!sec) return;
         Array.prototype.forEach.call(sec.children, function(c){ if (c.classList.contains('simple-more-wrap')) return; c.classList.toggle('simple-x', !KEEP[v](c, head(c))); });
         if (!sec.querySelector(':scope > .simple-more-wrap')){ var w=document.createElement('div'); w.className='simple-more-wrap'; w.innerHTML='<button type="button" class="btn btn-line full simple-more-any">⋯ أدوات أخرى</button>'; sec.appendChild(w); }
-        else sec.appendChild(sec.querySelector(':scope > .simple-more-wrap'));
+        else { var w2=sec.querySelector(':scope > .simple-more-wrap'); if (sec.lastElementChild!==w2) sec.appendChild(w2); }
       });
       document.querySelectorAll('.simple-more-any').forEach(function(b){ b.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; });
     }
     var st=document.createElement('style'); st.textContent='.simple-more-wrap{display:none;margin:4px 0 12px}body.simple .simple-more-wrap{display:block}body.simple:not(.simple-open) #st-list .li-main > .li-meta,body.simple:not(.simple-open) #st-list .ins-row,body.simple:not(.simple-open) #st-list .li-main > .sh-bar,body.simple:not(.simple-open) #st-list [data-shgo],body.simple:not(.simple-open) #st-list [data-webt],body.simple:not(.simple-open) #st-list [data-bxgo],body.simple:not(.simple-open) #st-list input[data-lb],body.simple:not(.simple-open) #ps-box,body.simple:not(.simple-open) .ask-box,body.simple:not(.simple-open) details[data-fold="buy-post"],body.simple:not(.simple-open) #bu-box{display:none!important}'; document.head.appendChild(st);
-    document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.simple-more-any'); if (!b) return; document.body.classList.toggle('simple-open'); mark(); var sm=$('simple-more'); if (sm) sm.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; if (document.body.classList.contains('simple-open')) window.scrollTo({top:0,behavior:'smooth'}); });
+    document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.simple-more-any'); if (!b) return; document.body.classList.toggle('simple-open'); mark(); var sm=$('simple-more'); if (sm) sm.textContent=document.body.classList.contains('simple-open')?'✕ سدّ الأدوات':'⋯ أدوات أخرى'; });
     var t=null; var mo=new MutationObserver(function(){ clearTimeout(t); t=setTimeout(mark, 120); });
     Object.keys(KEEP).forEach(function(v){ var sec=$('view-'+v); if (sec) mo.observe(sec,{childList:true}); });
     var _show75=show; show=function(){ var r=_show75.apply(this,arguments); try{ mark(); }catch(e){} return r; };
